@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zomato Healthy Mode</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --red: #E8240A;
+    --green: #1A7A3F;
+    --green-light: #2ECC71;
+    --cream: #F5EDD8;
+    --dark: #0D0D0D;
+    --mid: #1A1A1A;
+    --card: #141414;
+    --gold: #C9A84C;
+    --text: #E8E0D0;
+    --muted: #888;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--dark);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.35;
+  }
+
+  /* ─── SECTIONS ─── */
+  section {
+    min-height: 100vh;
+    padding: 80px 60px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    background: var(--dark);
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+  }
+
+  .hero-left {
+    background: var(--green);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+  }
+
+  .hero-left::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    top: -100px; left: -100px;
+  }
+  .hero-left::after {
+    content: '';
+    position: absolute;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    bottom: -50px; right: -50px;
+  }
+
+  .hero-phone {
+    width: 260px;
+    background: #111;
+    border-radius: 36px;
+    border: 2px solid rgba(255,255,255,0.12);
+    padding: 20px 16px;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    animation: float 4s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+  }
+
+  .phone-notch {
+    width: 80px; height: 20px;
+    background: #222;
+    border-radius: 10px;
+    margin: 0 auto 16px;
+  }
+
+  .phone-screen {
+    background: #0A1A10;
+    border-radius: 20px;
+    padding: 16px;
+    font-size: 11px;
+  }
+
+  .phone-header {
+    color: var(--green-light);
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  .calorie-ring {
+    width: 90px; height: 90px;
+    margin: 0 auto 12px;
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .calorie-ring svg {
+    position: absolute;
+    inset: 0;
+    transform: rotate(-90deg);
+  }
+
+  .calorie-ring-text {
+    text-align: center;
+    z-index: 1;
+  }
+
+  .calorie-ring-text .cal-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 16px;
+    color: var(--green-light);
+    font-weight: 700;
+  }
+
+  .calorie-ring-text .cal-label {
+    font-size: 8px;
+    color: var(--muted);
+  }
+
+  .phone-tags {
+    display: flex; flex-wrap: wrap; gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .phone-tag {
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 8px;
+    font-weight: 500;
+  }
+  .phone-tag.active { background: var(--green); color: white; }
+  .phone-tag.inactive { background: #1e2e20; color: #aaa; border: 1px solid #333; }
+
+  .phone-card {
+    background: #111d13;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid #1e3020;
+  }
+
+  .phone-card-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 8px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .streak-row {
+    display: flex; gap: 4px;
+    margin: 6px 0;
+  }
+
+  .streak-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .streak-dot.active { background: var(--green-light); }
+  .streak-dot.inactive { background: #333; }
+
+  .phone-cta {
+    background: var(--green-light);
+    color: #000;
+    border-radius: 8px;
+    padding: 6px;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    font-family: 'Space Mono', monospace;
+    margin-top: 8px;
+  }
+
+  .hero-right {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 60px;
+  }
+
+  .hero-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--green-light);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .hero-eyebrow::before {
+    content: '';
+    width: 40px; height: 1px;
+    background: var(--green-light);
+  }
+
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(48px, 7vw, 88px);
+    font-weight: 900;
+    line-height: 0.95;
+    margin-bottom: 32px;
+    color: var(--cream);
+  }
+
+  h1 .accent { color: var(--red); font-style: italic; }
+
+  .hero-tagline {
+    font-size: 18px;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 400px;
+    margin-bottom: 40px;
+  }
+
+  .hero-tagline strong { color: var(--text); font-weight: 500; }
+
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    background: var(--red);
+    color: white;
+    padding: 16px 32px;
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-decoration: none;
+    width: fit-content;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .hero-cta:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(232,36,10,0.4); }
+
+  /* ─── SECTION TITLES ─── */
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--green-light);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.8;
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(36px, 5vw, 64px);
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--cream);
+    margin-bottom: 48px;
+  }
+
+  h2 em { color: var(--red); font-style: italic; }
+
+  /* ─── CHALLENGE ─── */
+  .challenge {
+    background: var(--mid);
+  }
+
+  .challenge-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 0;
+  }
+
+  .challenge-card {
+    padding: 48px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .challenge-card:nth-child(1) { background: #0f0f0f; }
+  .challenge-card:nth-child(2) { background: #141414; }
+
+  .challenge-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--red);
+  }
+
+  .challenge-card:nth-child(2)::before { background: var(--gold); }
+
+  .challenge-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--cream);
+    margin-bottom: 16px;
+  }
+
+  .challenge-card p {
+    font-size: 15px;
+    line-height: 1.8;
+    color: #aaa;
+  }
+
+  .big-quote {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 8vw, 120px);
+    color: rgba(232,36,10,0.08);
+    line-height: 1;
+    position: absolute;
+    top: 20px; right: 30px;
+    font-weight: 900;
+    pointer-events: none;
+  }
+
+  /* ─── AUDIENCE ─── */
+  .audience { background: var(--dark); }
+
+  .audience-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #222;
+  }
+
+  .audience-card {
+    background: var(--dark);
+    padding: 48px 40px;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s;
+  }
+
+  .audience-card:hover { background: #111; }
+
+  .audience-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 64px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.04);
+    position: absolute;
+    top: 16px; right: 24px;
+    line-height: 1;
+  }
+
+  .audience-icon {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  .audience-card:nth-child(1) .audience-icon { background: rgba(232,36,10,0.15); }
+  .audience-card:nth-child(2) .audience-icon { background: rgba(46,204,113,0.15); }
+  .audience-card:nth-child(3) .audience-icon { background: rgba(201,168,76,0.15); }
+
+  .audience-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+
+  .audience-card p {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.7;
+  }
+
+  /* ─── MARKET ─── */
+  .market {
+    background: var(--green);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .market::before {
+    content: '';
+    position: absolute;
+    width: 800px; height: 800px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.15);
+    right: -200px; top: -200px;
+  }
+
+  .market h2 { color: white; }
+  .market .section-label { color: rgba(255,255,255,0.6); }
+
+  .market-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .stat-block {
+    border-top: 1px solid rgba(255,255,255,0.2);
+    padding-top: 24px;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(48px, 6vw, 80px);
+    font-weight: 900;
+    color: white;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 8px;
+  }
+
+  .stat-desc {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+
+  .market-source {
+    margin-top: 48px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 1px;
+    position: relative; z-index: 1;
+  }
+
+  /* ─── COMPETITIVE GAP ─── */
+  .gap { background: #080808; }
+
+  .gap-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .gap-card {
+    background: var(--card);
+    border: 1px solid #1e1e1e;
+    border-radius: 2px;
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .gap-card:hover { border-color: #333; }
+
+  .gap-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px; width: 100%;
+    background: var(--red);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+
+  .gap-card:hover::after { transform: scaleX(1); }
+
+  .gap-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    color: var(--cream);
+    margin-bottom: 12px;
+  }
+
+  .gap-card p {
+    font-size: 14px;
+    color: #777;
+    line-height: 1.7;
+  }
+
+  .gap-icon {
+    font-size: 28px;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  /* ─── SOLUTION ─── */
+  .solution {
+    background: var(--mid);
+  }
+
+  .solution-steps {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    position: relative;
+  }
+
+  .solution-steps::before {
+    content: '';
+    position: absolute;
+    top: 28px; left: 5%;
+    width: 90%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--green-light), transparent);
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0 16px;
+    position: relative;
+  }
+
+  .step-num {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: var(--dark);
+    border: 1px solid #333;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 13px;
+    color: var(--green-light);
+    margin-bottom: 20px;
+    position: relative; z-index: 2;
+    transition: background 0.3s, border-color 0.3s;
+  }
+
+  .step:hover .step-num {
+    background: var(--green);
+    border-color: var(--green);
+    color: white;
+  }
+
+  .step-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: var(--cream);
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .step-desc {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.6;
+  }
+
+  /* ─── FEATURES ─── */
+  .features { background: var(--dark); }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #1a1a1a;
+  }
+
+  .feature-card {
+    background: var(--dark);
+    padding: 40px;
+    transition: background 0.2s;
+  }
+
+  .feature-card:hover { background: #0a0a0a; }
+
+  .feature-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--cream);
+    margin-bottom: 10px;
+    margin-top: 16px;
+  }
+
+  .feature-card p {
+    font-size: 13px;
+    color: #666;
+    line-height: 1.7;
+  }
+
+  .feature-emoji {
+    font-size: 24px;
+  }
+
+  /* ─── IMPACT ─── */
+  .impact {
+    background: #050505;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .impact::before {
+    content: 'IMPACT';
+    position: absolute;
+    font-family: 'Playfair Display', serif;
+    font-size: 20vw;
+    font-weight: 900;
+    color: rgba(255,255,255,0.015);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  .impact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    position: relative; z-index: 1;
+  }
+
+  .impact-section h3 {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 32px;
+  }
+
+  .impact-metrics {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .impact-metric {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 20px 24px;
+    background: #0d0d0d;
+    border-left: 2px solid var(--red);
+  }
+
+  .impact-metric.green { border-left-color: var(--green-light); }
+  .impact-metric.gold { border-left-color: var(--gold); }
+
+  .impact-metric-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--cream);
+    min-width: 100px;
+  }
+
+  .impact-metric-info p:first-child {
+    font-weight: 500;
+    color: var(--text);
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+
+  .impact-metric-info p:last-child {
+    font-size: 12px;
+    color: #555;
+  }
+
+  .impact-note {
+    margin-top: 32px;
+    padding: 16px;
+    border: 1px solid #1a1a1a;
+    border-radius: 2px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: #444;
+    line-height: 1.7;
+  }
+
+  /* ─── WHY / RISKS ─── */
+  .why {
+    background: var(--mid);
+  }
+
+  .why-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+  }
+
+  .why-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .why-card {
+    display: flex;
+    gap: 20px;
+    padding: 24px;
+    background: rgba(46,204,113,0.05);
+    border: 1px solid rgba(46,204,113,0.1);
+    border-radius: 2px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+
+  .why-card:hover {
+    background: rgba(46,204,113,0.08);
+    border-color: rgba(46,204,113,0.2);
+  }
+
+  .why-card-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .why-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    color: var(--cream);
+    margin-bottom: 6px;
+  }
+
+  .why-card p {
+    font-size: 13px;
+    color: #777;
+    line-height: 1.7;
+  }
+
+  .risks-section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--cream);
+    margin-bottom: 24px;
+  }
+
+  .risk-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid #1a1a1a;
+  }
+
+  .risk-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--red);
+    min-width: 24px;
+  }
+
+  .risk-item p {
+    font-size: 14px;
+    color: #888;
+    line-height: 1.6;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    min-height: auto;
+    padding: 40px 60px;
+    background: var(--green);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+  }
+
+  .footer-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: white;
+    font-weight: 700;
+  }
+
+  .footer-brand span { font-style: italic; color: rgba(255,255,255,0.6); }
+
+  .footer-by {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    letter-spacing: 2px;
+  }
+
+  /* ─── NAV DOTS ─── */
+  .nav-dots {
+    position: fixed;
+    right: 24px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 100;
+  }
+
+  .nav-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .nav-dot.active { background: var(--green-light); transform: scale(1.5); }
+
+  /* ─── SCROLL ANIMATIONS ─── */
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--dark); }
+  ::-webkit-scrollbar-thumb { background: var(--green); }
+</style>
+</head>
+<body>
+
+<!-- NAV DOTS -->
+<nav class="nav-dots">
+  <div class="nav-dot active" onclick="scrollToSection(0)"></div>
+  <div class="nav-dot" onclick="scrollToSection(1)"></div>
+  <div class="nav-dot" onclick="scrollToSection(2)"></div>
+  <div class="nav-dot" onclick="scrollToSection(3)"></div>
+  <div class="nav-dot" onclick="scrollToSection(4)"></div>
+  <div class="nav-dot" onclick="scrollToSection(5)"></div>
+  <div class="nav-dot" onclick="scrollToSection(6)"></div>
+  <div class="nav-dot" onclick="scrollToSection(7)"></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="s0">
+  <div class="hero-inner">
+    <div class="hero-left">
+      <div class="hero-phone">
+        <div class="phone-notch"></div>
+        <div class="phone-screen">
+          <div class="phone-header">🥗 Healthy Zone</div>
+          <div class="calorie-ring">
+            <svg viewBox="0 0 90 90">
+              <circle cx="45" cy="45" r="38" fill="none" stroke="#1a2e1c" stroke-width="6"/>
+              <circle cx="45" cy="45" r="38" fill="none" stroke="#2ECC71" stroke-width="6"
+                stroke-dasharray="238.76" stroke-dashoffset="95.5" stroke-linecap="round"/>
+            </svg>
+            <div class="calorie-ring-text">
+              <div class="cal-num">1,240</div>
+              <div class="cal-label">/2,000 kcal</div>
+            </div>
+          </div>
+          <div class="phone-tags">
+            <span class="phone-tag active">All</span>
+            <span class="phone-tag active">High Protein</span>
+            <span class="phone-tag inactive">Low Carb</span>
+            <span class="phone-tag inactive">Keto</span>
+          </div>
+          <div class="phone-card">
+            <div class="phone-card-title">🔥 March Challenge</div>
+            <div style="font-size:10px; color:#2ECC71; font-weight:700; margin-bottom:4px;">HEALTHY HIGH-FIVE</div>
+            <div style="font-size:8px; color:#666; margin-bottom:8px;">Don't let your streak die! 5 healthy orders = badge</div>
+            <div class="streak-row">
+              <div class="streak-dot active"></div>
+              <div class="streak-dot active"></div>
+              <div class="streak-dot active"></div>
+              <div class="streak-dot inactive"></div>
+              <div class="streak-dot inactive"></div>
+            </div>
+            <div class="phone-cta">Complete Mission →</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-eyebrow">Product Concept</div>
+      <h1>Zomato<br><span class="accent">Healthy</span><br>Mode</h1>
+      <p class="hero-tagline">
+        Order food. <strong>Stay within calories.</strong><br>
+        A calorie-aware ordering experience built natively into Zomato — no app switching, no manual logging.
+      </p>
+      <a href="#s1" class="hero-cta">Explore the Deck ↓</a>
+    </div>
+  </div>
+</section>
+
+<!-- CHALLENGE -->
+<section class="challenge" id="s1">
+  <div class="section-label">The Problem</div>
+  <h2>Why users <em>lose control</em><br>of their diet</h2>
+  <div class="challenge-grid">
+    <div class="challenge-card reveal">
+      <div class="big-quote">!</div>
+      <h3>The Problem</h3>
+      <p>Users cannot track calories while ordering food. Tracking is manual, time-consuming, and inconsistent. When ordering out, users lose control of their diet goals entirely.</p>
+    </div>
+    <div class="challenge-card reveal reveal-delay-1">
+      <div class="big-quote">?</div>
+      <h3>Current Reality</h3>
+      <p>Users either don't track calories at all, use separate apps like MyFitnessPal, or avoid ordering food entirely just to maintain control over their diet.</p>
+    </div>
+  </div>
+</section>
+
+<!-- AUDIENCE -->
+<section class="audience" id="s2">
+  <div class="section-label">Target Users</div>
+  <h2>Who we're <em>building</em> for</h2>
+  <div class="audience-grid">
+    <div class="audience-card reveal">
+      <div class="audience-num">01</div>
+      <div class="audience-icon">💼</div>
+      <h3>Young Professionals</h3>
+      <p>Ages 22–30, urban working professionals who order food frequently and lack time to meal prep or track manually.</p>
+    </div>
+    <div class="audience-card reveal reveal-delay-1">
+      <div class="audience-num">02</div>
+      <div class="audience-icon">🏃</div>
+      <h3>Health-Conscious</h3>
+      <p>Want to stay fit but have limited time for manual tracking. They care about nutrition but won't sacrifice convenience.</p>
+    </div>
+    <div class="audience-card reveal reveal-delay-2">
+      <div class="audience-num">03</div>
+      <div class="audience-icon">📱</div>
+      <h3>Convenience-Driven</h3>
+      <p>Prefer integrated solutions over switching between multiple apps. One tap should do it all.</p>
+    </div>
+  </div>
+</section>
+
+<!-- MARKET -->
+<section class="market" id="s3">
+  <div class="section-label">Market Opportunity</div>
+  <h2 style="color:white">The numbers<br>speak for themselves</h2>
+  <div class="market-stats">
+    <div class="stat-block reveal">
+      <div class="stat-num">$10–15B</div>
+      <div class="stat-label">Market Size</div>
+      <div class="stat-desc">Estimated Indian online food delivery market, growing fast</div>
+    </div>
+    <div class="stat-block reveal reveal-delay-1">
+      <div class="stat-num">2</div>
+      <div class="stat-label">Market Leaders</div>
+      <div class="stat-desc">Zomato and Swiggy dominate — first mover advantage is critical</div>
+    </div>
+    <div class="stat-block reveal reveal-delay-2">
+      <div class="stat-num">↑</div>
+      <div class="stat-label">Health Awareness</div>
+      <div class="stat-desc">Post-COVID surge in fitness app usage and diet tracking tools creates strong demand signal</div>
+    </div>
+  </div>
+  <p class="market-source">Source: Industry reports and market analysis. Growth driven by urban demand and post-COVID health consciousness.</p>
+</section>
+
+<!-- COMPETITIVE GAP -->
+<section class="gap" id="s4">
+  <div class="section-label">Competitive Gap</div>
+  <h2>What nobody<br>has <em>built yet</em></h2>
+  <div class="gap-grid">
+    <div class="gap-card reveal">
+      <span class="gap-icon">📊</span>
+      <h3>No Calorie Tracking</h3>
+      <p>Current platforms lack built-in calorie tracking systems during the ordering process. The data is never shown where it matters most.</p>
+    </div>
+    <div class="gap-card reveal reveal-delay-1">
+      <span class="gap-icon">🗄️</span>
+      <h3>Limited Data</h3>
+      <p>Calorie information is not consistently available across restaurants — creating a fragmented, unreliable experience.</p>
+    </div>
+    <div class="gap-card reveal reveal-delay-2">
+      <span class="gap-icon">🔗</span>
+      <h3>No Habit System</h3>
+      <p>Absence of gamification, streaks, or progress tracking features means no sticky behavior loop for healthy eating.</p>
+    </div>
+    <div class="gap-card reveal reveal-delay-3">
+      <span class="gap-icon">📵</span>
+      <h3>Disconnected Experience</h3>
+      <p>Health and ordering remain separate, requiring users to switch apps — breaking the flow and killing compliance.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUTION -->
+<section class="solution" id="s5">
+  <div class="section-label">The Solution</div>
+  <h2>Five steps to<br>a <em>healthier</em> order</h2>
+  <div class="solution-steps">
+    <div class="step reveal">
+      <div class="step-num">01</div>
+      <div class="step-title">Healthy Mode Toggle</div>
+      <div class="step-desc">One-click activation on the home screen</div>
+    </div>
+    <div class="step reveal reveal-delay-1">
+      <div class="step-num">02</div>
+      <div class="step-title">Set Daily Calorie Goal</div>
+      <div class="step-desc">Personalized target based on your profile</div>
+    </div>
+    <div class="step reveal reveal-delay-2">
+      <div class="step-num">03</div>
+      <div class="step-title">Calorie-Tagged Menu</div>
+      <div class="step-desc">See calorie info inline while you browse</div>
+    </div>
+    <div class="step reveal reveal-delay-3">
+      <div class="step-num">04</div>
+      <div class="step-title">Auto-Track Orders</div>
+      <div class="step-desc">Calories log automatically on checkout</div>
+    </div>
+    <div class="step reveal reveal-delay-4">
+      <div class="step-num">05</div>
+      <div class="step-title">Build Streaks</div>
+      <div class="step-desc">Habits form through daily progress loops</div>
+    </div>
+  </div>
+
+  <!-- Feature grid below -->
+  <div style="margin-top: 64px;">
+    <div class="section-label">Key Features</div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <span class="feature-emoji">⚡</span>
+        <h3>Smart Toggle</h3>
+        <p>One-click activation on home screen for instant access to calorie tracking mode.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-emoji">🍱</span>
+        <h3>Calorie Tagging</h3>
+        <p>Comprehensive calorie information displayed directly on food items during browsing.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-emoji">🎯</span>
+        <h3>Daily Goals</h3>
+        <p>Personalized calorie targets based on user fitness objectives and dietary preferences.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-emoji">📈</span>
+        <h3>Progress Tracking</h3>
+        <p>Visual progress bar shows calories consumed versus daily limit in real-time.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-emoji">🏆</span>
+        <h3>Streak System</h3>
+        <p>Leaderboard and gamification elements to motivate consistent healthy ordering.</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-emoji">📊</span>
+        <h3>Weekly Insights</h3>
+        <p>Data-driven weekly reports showing ordering patterns and health trends.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPACT -->
+<section class="impact" id="s6">
+  <div class="section-label">Expected Impact</div>
+  <h2>What we <em>expect</em><br>to move</h2>
+  <div class="impact-grid">
+    <div class="impact-section">
+      <h3>Behavioral Changes</h3>
+      <div class="impact-metrics">
+        <div class="impact-metric reveal">
+          <div class="impact-metric-num">10–20%</div>
+          <div class="impact-metric-info">
+            <p>Retention Increase</p>
+            <p>Expected improvement in user retention rates</p>
+          </div>
+        </div>
+        <div class="impact-metric green reveal reveal-delay-1">
+          <div class="impact-metric-num">2–3×</div>
+          <div class="impact-metric-info">
+            <p>Orders Per Week</p>
+            <p>Anticipated increase in weekly order frequency</p>
+          </div>
+        </div>
+        <div class="impact-metric gold reveal reveal-delay-2">
+          <div class="impact-metric-num">10–20%</div>
+          <div class="impact-metric-info">
+            <p>Feature Adoption</p>
+            <p>Projected active users trying Healthy Mode</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="impact-section">
+      <h3>Business Metrics</h3>
+      <div class="impact-metrics">
+        <div class="impact-metric reveal">
+          <div class="impact-metric-num">₹19</div>
+          <div class="impact-metric-info">
+            <p>Monthly Subscription</p>
+            <p>Premium tier for advanced features</p>
+          </div>
+        </div>
+        <div class="impact-metric green reveal reveal-delay-1">
+          <div class="impact-metric-num">1–2M</div>
+          <div class="impact-metric-info">
+            <p>Estimated Subscribers</p>
+            <p>Projected premium user base at scale</p>
+          </div>
+        </div>
+      </div>
+      <div class="impact-note reveal reveal-delay-2">
+        Note: All metrics represent projected adoption scenarios and hypothetical revenue projections based on product design principles. Not actual data.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY + RISKS -->
+<section class="why" id="s7">
+  <div class="section-label">Why This Works</div>
+  <h2>The case for <em>building</em> this</h2>
+  <div class="why-grid">
+    <div class="why-cards">
+      <div class="why-card reveal">
+        <div class="why-card-icon">🔗</div>
+        <div>
+          <h3>Unified Experience</h3>
+          <p>Everything in one app eliminates friction and manual tracking effort. No context-switching, no drop-off.</p>
+        </div>
+      </div>
+      <div class="why-card reveal reveal-delay-1">
+        <div class="why-card-icon">📈</div>
+        <div>
+          <h3>Market Timing</h3>
+          <p>Rising health awareness and fitness app usage create strong demand. The behavioral shift is already happening.</p>
+        </div>
+      </div>
+      <div class="why-card reveal reveal-delay-2">
+        <div class="why-card-icon">🔁</div>
+        <div>
+          <h3>Habit Building</h3>
+          <p>Streaks, progress tracking, and gamification drive daily engagement — the same loop that makes Duolingo sticky.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="risks-section reveal">
+      <h3>Risks to Consider</h3>
+      <div class="risk-item">
+        <div class="risk-num">R1</div>
+        <p>Inaccurate calorie data from restaurants — requires systematic data collection and partner onboarding</p>
+      </div>
+      <div class="risk-item">
+        <div class="risk-num">R2</div>
+        <p>User burnout from streak pressure — needs a forgiving mechanic like streak shields</p>
+      </div>
+      <div class="risk-item">
+        <div class="risk-num">R3</div>
+        <p>Limited restaurant calorie information — partial rollout may feel incomplete</p>
+      </div>
+      <div class="risk-item">
+        <div class="risk-num">R4</div>
+        <p>Data accuracy and verification challenges — nutritional claims must be trustworthy</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-brand">Zomato <span>Healthy Mode</span></div>
+  <div class="footer-by">A PRODUCT CONCEPT BY AMITANSHU</div>
+</footer>
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const dots = document.querySelectorAll('.nav-dot');
+
+  function scrollToSection(i) {
+    sections[i].scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Active dot on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const idx = Array.from(sections).indexOf(entry.target);
+        dots.forEach(d => d.classList.remove('active'));
+        if (dots[idx]) dots[idx].classList.add('active');
+      }
+    });
+  }, { threshold: 0.4 });
+
+  sections.forEach(s => observer.observe(s));
+
+  // Reveal on scroll
+  const reveals = document.querySelectorAll('.reveal');
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible');
+    });
+  }, { threshold: 0.15 });
+
+  reveals.forEach(r => revealObserver.observe(r));
+</script>
+</body>
+</html>
